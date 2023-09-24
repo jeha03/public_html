@@ -1,0 +1,85 @@
+version: '2'
+
+networks:
+  my-net:
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
+services:
+  mysql8:
+    build: ./files_docker/mysql8
+    ports:
+       - '3306:3306'
+    environment:
+           #- MYSQL_ROOT_USER=root
+      - MYSQL_ROOT_PASSWORD=BLBJn1993
+      #Эти параметры передаются в /docker_files/mysql8/files/init.sh
+      - MYSQL_ACCESS_IP=184.174.38.116
+
+      - MYSQL_USER_LOGIN=jeha03
+      - MYSQL_USER_PASSWORD=BLBJn1993
+
+      - MYSQL_DATABASE=server
+
+      #Скрипт /docker_files/mysql8/files/init.sh создаст 3 базы и вызовет импорт всех схем в этих папках
+      - MYSQL_DATABASE_OTHER1=rusacis
+      - MYSQL_DATABASE_SHEMA1=/temp_sql/acis/*.sql
+
+      - MYSQL_DATABASE_OTHER2=lucera
+      - MYSQL_DATABASE_SHEMA2=/temp_sql/lucera/*.sql
+
+      - MYSQL_DATABASE_OTHER3=pwsoft
+      - MYSQL_DATABASE_SHEMA3=/temp_sql/pwsoft/*.sql
+
+      - MYSQL_AUTHENTICATION_PLUGIN=mysql_native_password
+    volumes:
+       - 'mysql_data:/bitnami/mysql/data'
+    networks:
+      my-net:
+        ipv4_address: 184.174.38.116
+  laravel:
+    build: ./files_docker/laravel9
+    stdin_open: true
+    ports:
+      - '8000:8000'
+      - '5173:5173'
+    networks:
+      my-net:
+        ipv4_address: 184.174.38.116
+      #command: "composer install"
+      #command:  "/bin/bash"
+      #command: "php artisan migrate"
+      #command: "php artisan key:generate"
+    environment:
+      - DB_HOST=184.174.38.116
+        # - DB_PORT=3306
+      - DB_USERNAME=jeha03
+      - DB_DATABASE=server
+      - DB_PASSWORD=BLBJn1993
+        
+      - DB_CONNECTION_SECOND=mysql
+      - DB_HOST_SECOND=184.174.38.116
+      - DB_PORT_SECOND=3306
+      - DB_DATABASE_SECOND=rusacis
+      - DB_USERNAME_SECOND=gawric
+      - DB_PASSWORD_SECOND=jtgEuZ8udR7F
+      
+      - DB_CONNECTION_THREE=mysql
+      - DB_HOST_THREE=172.20.0.4
+      - DB_PORT_THREE=3306
+      - DB_DATABASE_THREE=pwsoft
+      - DB_USERNAME_THREE=gawric
+      - DB_PASSWORD_THREE=jtgEuZ8udR7F
+
+      - DB_CONNECTION_FOUR=mysql
+      - DB_HOST_FOUR=172.20.0.4
+      - DB_PORT_FOUR=3306
+      - DB_DATABASE_FOUR=lucera
+      - DB_USERNAME_FOUR=gawric
+      - DB_PASSWORD_FOUR=jtgEuZ8udR7F
+      - APP_URL=http://45.12.236.179
+    depends_on:
+        - mysql8
+volumes:
+  mysql_data:
+    driver: local
